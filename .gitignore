@@ -1,0 +1,25 @@
+# Local
+.DS_Store
+*.local
+*.log*
+
+# Dist
+node_modules
+dist/
+
+# IDE
+!.vscode/extensions.json
+.idea
+
+typed-router.d.ts
+output
+
+# assets
+custom.json
+.history
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+playwright/.cache/
