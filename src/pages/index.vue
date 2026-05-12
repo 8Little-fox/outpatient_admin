@@ -3,7 +3,9 @@ import { watchImmediate } from '@vueuse/core'
 import { useLoginStore } from '~/store'
 
 const router = useRouter()
-const { isLogin, currentRole } = useLoginStore()
+const login = useLoginStore()
+login.hydrateSessionFromStorage()
+const { isLogin, currentRole } = login
 
 watchImmediate([isLogin, currentRole], () => {
   if (!isLogin.value) {

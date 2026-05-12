@@ -245,7 +245,6 @@ function saveSchedule() {
       && s.work_date === workDate
       && s.time_slot === scheduleForm.time_slot,
   )
-  console.log('dup', dup, dataList.value)
   if (dup) {
     message.error('该医生在该日该时段已存在排班')
     return

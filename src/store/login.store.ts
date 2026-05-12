@@ -6,8 +6,28 @@ import { useCacheStore } from './cache.store'
 import { useDoctorStore } from './doctor.store'
 import { usePatientStore } from './patient.store'
 
+const SESSION_STORAGE_KEY = 'outpatient-session'
+
+/** 从 localStorage 解析会话（供路由守卫同步使用） */
+function readSessionFromLocalStorage(): LoginSession | null {
+  if (typeof localStorage === 'undefined')
+    return null
+  try {
+    const raw = localStorage.getItem(SESSION_STORAGE_KEY)
+    if (raw == null || raw === '' || raw === 'null')
+      return null
+    const o = JSON.parse(raw) as LoginSession
+    if (!o || typeof o.role !== 'string' || typeof o.account !== 'string')
+      return null
+    return o
+  }
+  catch {
+    return null
+  }
+}
+
 export const useLoginStore = createGlobalState(() => {
-  const session = useLocalStorage<LoginSession | null>('outpatient-session', null)
+  const session = useLocalStorage<LoginSession | null>(SESSION_STORAGE_KEY, null)
   const { setToken, removeToken } = useCacheStore()
 
   const isLogin = computed(() => !!session.value)
@@ -97,6 +117,23 @@ export const useLoginStore = createGlobalState(() => {
     removeToken()
   }
 
+  /**
+   * 将 localStorage 中的会话写回响应式 session。
+   * 解决首屏/刷新时 router.beforeEach 早于 useLocalStorage 完成同步，导致 currentRole 短暂为 null 被误判跳转的问题。
+   */
+  function hydrateSessionFromStorage() {
+    const parsed = readSessionFromLocalStorage()
+    const cur = session.value
+    // 登录刚写入 session 时，useLocalStorage 可能尚未把同一条会话落到 localStorage，
+    // 此时 parsed 为 null，若用 null 覆盖内存会导致「登录成功但不跳转 / 立刻掉线」。
+    if (cur != null && parsed == null)
+      return
+    const same = (cur == null && parsed == null)
+      || (cur != null && parsed != null && cur.role === parsed.role && cur.account === parsed.account && cur.token === parsed.token)
+    if (!same)
+      session.value = parsed
+  }
+
   /** 找回密码：按角色匹配账号后重置为默认密码 */
   function resetPassword(role: RoleType, account: string, newPassword: string) {
     if (!newPassword)
@@ -133,5 +170,6 @@ export const useLoginStore = createGlobalState(() => {
     login,
     logout,
     resetPassword,
+    hydrateSessionFromStorage,
   }
 })

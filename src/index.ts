@@ -6,10 +6,11 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { routes } from 'vue-router/auto-routes'
 import App from './App.vue'
 import { authSetup } from './setup'
-import { queryClient } from './store'
+import { queryClient, useLoginStore } from './store'
 import './style/index.css'
 
 function bootstrap() {
+  useLoginStore().hydrateSessionFromStorage()
   const router = createRouter({
     history: createWebHistory(),
     routes: routes || [],

@@ -3,7 +3,9 @@ import { useLoginStore } from '~/store'
 
 export function authSetup(router: Router) {
   router.beforeEach((to, _from, next) => {
-    const { isLogin, currentRole } = useLoginStore()
+    const login = useLoginStore()
+    login.hydrateSessionFromStorage()
+    const { isLogin, currentRole } = login
 
     if (to.path === '/register' || to.path === '/forgot-password') {
       next()
